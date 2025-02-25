@@ -7,9 +7,7 @@ If you need to archive attached documents in a different location or send them a
 
 Get SharePoint location for record
 
-Rewrite
 The "Get SharePoint location for record" flow utilizes the Document Location Dataverse table to gather details about the attachment location, such as the folder name and sharepointdocumentlocationid. It then calls the RetrieveAbsoluteAndSiteCollectionUrl() Dataverse function to obtain the SharePoint Online site collection URL. For a more comprehensive explanation of these concepts, refer to the article: [Power Automate Get absolute Sharepoint URL from document location](https://crmaddicted.blogspot.com/2020/03/power-automate-get-absolute-sharepoint.html).
-
 
 The flow then executes a series of SharePoint REST api calls  to obtain a full set of information, like
 
