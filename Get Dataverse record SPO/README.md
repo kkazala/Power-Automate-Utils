@@ -1,15 +1,26 @@
 ﻿# Get SharePoint location for Dataverse record
 
 
-SharePoint document management for Dataverse offers numerous [advantages](https://ludovicperrichon.com/synchronise-documents-in-between-dataverse-and-sharepoint). And while accessing documents and their locations via a model-driven Power Platform app is straightforward, retrieving them using Power Automate can be quite challenging.
+SharePoint document management for Dataverse offers numerous [advantages](https://ludovicperrichon.com/synchronise-documents-in-between-dataverse-and-sharepoint). But while accessing documents and their locations via a model-driven Power Platform app is straightforward, retrieving them using Power Automate can be quite challenging.
 
 If you need to archive attached documents in a different location or send them all via email as attachments, you must first locate the SharePoint Online (SPO) library and folder associated with the entity.
 
-Get SharePoint location for record
+## Get SharePoint location for record
 
-The "Get SharePoint location for record" flow utilizes the Document Location Dataverse table to gather details about the attachment location, such as the folder name and sharepointdocumentlocationid. It then calls the RetrieveAbsoluteAndSiteCollectionUrl() Dataverse function to obtain the SharePoint Online site collection URL. For a more comprehensive explanation of these concepts, refer to the article: [Power Automate Get absolute Sharepoint URL from document location](https://crmaddicted.blogspot.com/2020/03/power-automate-get-absolute-sharepoint.html).
+The "Get SharePoint location for record" flow uses the **Document Location** Dataverse table to gather details about the attachment location, such as the `Relative URL` (folder name) and `sharepointdocumentlocationid`.
 
-The flow then executes a series of SharePoint REST api calls  to obtain a full set of information, like
+Once SharePoint integration with Dataverse is configured for an entity, an entry pointing to the library in SharePoint is added. Note that the library name is based on the table logical name:
+![document location](./img/4.png)
+
+Only when the first document is attached to a record, additional entry is created in the **Document Location** table , referencing a folder in the SharePoint library. The folder name is based on the record properties:
+
+![document location for a record](./img/5.png)
+
+The above values are not enough to access the SharePoint location where the documents are stored, but can be used in a call to the [RetrieveAbsoluteAndSiteCollectionUrl()](https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/reference/retrieveabsoluteandsitecollectionurl?view=dataverse-latest) Dataverse function to obtain the SharePoint Online site collection URL:
+
+`/api/data/v9.2/sharepointdocumentlocations(sharepointdocumentlocationid)/Microsoft.Dynamics.CRM.RetrieveAbsoluteAndSiteCollectionUrl()`
+
+The flow then executes a series of SharePoint REST api calls  to obtain a full set of information, like:
 
 | parameter name | description | example |
 |-|-|-|
@@ -42,7 +53,6 @@ The solution consists of:
     - **SharePoint Online**
 
     ![Solution components](./img/1.png)
-
 
 
 ## Installation
