@@ -5,9 +5,8 @@ This repository contains a set of Power Automate workflow providing various basi
 - [Get SharePoint information from Data Source Environment Variables](./Parse%20List%20Data%20Source%20Info/README.md)
 - [Get Team Channel Library info from MS Teams context](./Get%20Teams%20Channel%20Library%20Info/README.md)
 - [Get Localized choice values for Dataverse record](./Get%20Localized%20choice%20values%20for%20record/README.md)
-- [ Get SharePoint information for Dataverse record](./Get%20Dataverse%20record%20SPO/README.md)
+- [Get SharePoint information for Dataverse record](./Get%20Dataverse%20record%20SPO/README.md)
 - [Xpath transformations - cheatsheet](./xPath%20101/README.md)
-
 
 ## Installation
 
