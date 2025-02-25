@@ -1,0 +1,294 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "kk_SharePointOnline"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "metadata": {
+            "operationMetadataId": "7a18778e-a463-4539-95e6-eccc0bcc1d4c"
+          },
+          "type": "Request",
+          "kind": "Button",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "title": "Site Url",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Please enter your input",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "text_1": {
+                  "title": "List Id",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Please enter your input",
+                  "x-ms-content-hint": "TEXT"
+                }
+              },
+              "required": [
+                "text",
+                "text_1"
+              ]
+            }
+          }
+        }
+      },
+      "actions": {
+        "Scope:_get_list_Id,_displayName_and_Name_(used_in_url)": {
+          "actions": {
+            "Send_an_HTTP_request_to_SharePoint:_get_list_URL": {
+              "runAfter": {},
+              "metadata": {
+                "operationMetadataId": "59be5bf8-03fe-47ed-beb9-b877606907f3"
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "HttpRequest",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "@triggerBody()['text']",
+                  "parameters/method": "GET",
+                  "parameters/uri": "_api/lists/GetById('@{triggerBody()['text_1']}')/?$expand=RootFolder&$select=Id,Title,ParentWebUrl,RootFolder/Name,RootFolder/ServerRelativeUrl",
+                  "parameters/headers": {
+                    "Accept": "application/json;odata=nometadata",
+                    "Content-Type": "application/json;odata=verbose;charset=utf-8"
+                  }
+                },
+                "authentication": {
+                  "type": "Raw",
+                  "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']"
+                }
+              }
+            },
+            "Parse_JSON;__get_list_Id,_displayName,Name_(used_in_url)_and_ServerRelativeUrl": {
+              "runAfter": {
+                "Send_an_HTTP_request_to_SharePoint:_get_list_URL": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "8fdbcc63-2893-4333-b738-56dec43aab91"
+              },
+              "type": "ParseJson",
+              "inputs": {
+                "content": "@body('Send_an_HTTP_request_to_SharePoint:_get_list_URL')",
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "RootFolder": {
+                      "type": "object",
+                      "properties": {
+                        "Name": {
+                          "type": "string"
+                        },
+                        "ServerRelativeUrl": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "Id": {
+                      "type": "string"
+                    },
+                    "Title": {
+                      "type": "string"
+                    },
+                    "ParentWebUrl": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "description": "RootFolder/Name is the list's \"Internal Name\" used in the URL. It's unique and cannot be changed via UI"
+            }
+          },
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "e3f31bab-b296-4360-a3a9-c39d8d6265b6"
+          },
+          "type": "Scope",
+          "description": "get list by ID"
+        },
+        "Scope:_get_list_DriveId,_displayName_": {
+          "actions": {
+            "Send_an_HTTP_request_to_SharePoint:_get_Drive_Id": {
+              "runAfter": {},
+              "metadata": {
+                "operationMetadataId": "243849c8-f96d-443e-bedb-1b759b83c170"
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "HttpRequest",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "@triggerBody()['text']",
+                  "parameters/method": "GET",
+                  "parameters/uri": "_api/v2.0/drives?$select=id,name",
+                  "parameters/headers": {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                  }
+                },
+                "authentication": {
+                  "type": "Raw",
+                  "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']"
+                }
+              },
+              "description": "name: Internal Name used in URL, displayName: list name displayed in the UI"
+            },
+            "Parse_JSON;_get_id,_name": {
+              "runAfter": {
+                "Send_an_HTTP_request_to_SharePoint:_get_Drive_Id": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "7d765e3a-1e94-4f25-99bc-2548ed31299e"
+              },
+              "type": "ParseJson",
+              "inputs": {
+                "content": "@body('Send_an_HTTP_request_to_SharePoint:_get_Drive_Id')",
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "@@odata.context": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "description": "returns id in Graph format, displayname and absolute url"
+            },
+            "Filter_array:_find_list_defined_in_input_parameter": {
+              "runAfter": {
+                "Parse_JSON;_get_id,_name": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "af810b49-711b-40f9-8800-56a139aadb8d"
+              },
+              "type": "Query",
+              "inputs": {
+                "from": "@body('Parse_JSON;_get_id,_name')?['value']",
+                "where": "@equals(item()?['name'], body('Parse_JSON;__get_list_Id,_displayName,Name_(used_in_url)_and_ServerRelativeUrl')?['Title'])"
+              }
+            }
+          },
+          "runAfter": {
+            "Scope:_get_list_Id,_displayName_and_Name_(used_in_url)": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "1edafec7-4b06-4afa-ba3e-46f00e3d3ffa"
+          },
+          "type": "Scope"
+        },
+        "Respond_to_a_Power_App_or_flow": {
+          "runAfter": {
+            "Scope:_get_list_DriveId,_displayName_": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "4e332ce8-e9b8-4449-b0c0-f68675e1b13f"
+          },
+          "type": "Response",
+          "kind": "PowerApp",
+          "inputs": {
+            "statusCode": 200,
+            "body": {
+              "list_id": "@body('Parse_JSON;__get_list_Id,_displayName,Name_(used_in_url)_and_ServerRelativeUrl')?['Id']",
+              "drive_id": "@{if(greater(length(body('Filter_array:_find_list_defined_in_input_parameter')),0),first(body('Filter_array:_find_list_defined_in_input_parameter'))['id']\r\n,'')}",
+              "name": "@body('Parse_JSON;__get_list_Id,_displayName,Name_(used_in_url)_and_ServerRelativeUrl')?['RootFolder']?['Name']",
+              "title": "@body('Parse_JSON;__get_list_Id,_displayName,Name_(used_in_url)_and_ServerRelativeUrl')?['Title']",
+              "absolute_url": "@{triggerBody()['text']}@{replace(body('Parse_JSON;__get_list_Id,_displayName,Name_(used_in_url)_and_ServerRelativeUrl')?['RootFolder']?['ServerRelativeUrl'],\r\n\tbody('Parse_JSON;__get_list_Id,_displayName,Name_(used_in_url)_and_ServerRelativeUrl')?['ParentWebUrl'],'')}"
+            },
+            "schema": {
+              "type": "object",
+              "properties": {
+                "list_id": {
+                  "title": "List Id",
+                  "x-ms-dynamically-added": true,
+                  "type": "string"
+                },
+                "drive_id": {
+                  "title": "Drive Id",
+                  "x-ms-dynamically-added": true,
+                  "type": "string"
+                },
+                "name": {
+                  "title": "Name",
+                  "x-ms-dynamically-added": true,
+                  "type": "string"
+                },
+                "title": {
+                  "title": "Title",
+                  "x-ms-dynamically-added": true,
+                  "type": "string"
+                },
+                "absolute_url": {
+                  "title": "Absolute Url",
+                  "x-ms-dynamically-added": true,
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "description": "Return list/libary Id, driveId, Name (Root Folder Name, used in URLs), Title (Display Name) and absolute URL"
+        }
+      }
+    },
+    "templateName": ""
+  },
+  "schemaVersion": "1.0.0.0"
+}

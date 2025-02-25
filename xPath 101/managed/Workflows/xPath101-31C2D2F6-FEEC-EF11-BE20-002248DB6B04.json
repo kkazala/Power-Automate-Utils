@@ -1,0 +1,138 @@
+{
+  "properties": {
+    "connectionReferences": {},
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "metadata": {
+            "operationMetadataId": "48aec118-c9b0-43bf-94d2-084f4acb168a"
+          },
+          "type": "Request",
+          "kind": "Button",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "actions": {
+        "Initialize_variable:_sBookstoreXml": {
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "e7b7142c-e201-4495-a13b-33ebbe84eb9f"
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "sBookstoreXml",
+                "type": "string",
+                "value": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<bookstore>\n    <book>\n        <title lang=\"en\">Harry Potter</title>\n        <author>J K. Rowling</author>\n        <year>2005</year>\n        <price currency=\"USD\">29.99</price>\n        <info>\n            <chapters>\n                <chapter>\n                    <name>The Boy Who Lived</name>\n                    <page>1</page>\n                    <description>Introduction to Harry Potter's early life.</description>\n                </chapter>\n                <chapter>\n                    <name>The Vanishing Glass</name>\n                    <page>15</page>\n                    <description>Harry's encounter with a snake at the zoo.</description>\n                </chapter>\n            </chapters>\n        </info>\n    </book>\n    <book>\n        <title lang=\"de\">Der Hobbit</title>\n        <author>J.R.R. Tolkien</author>\n        <year>1937</year>\n        <price currency=\"USD\">19.99</price>\n        <info>\n            <chapters>\n                <chapter lcid=\"1031\">\n                    <name>Eine unerwartete Party</name>\n                    <page>1</page>\n                    <description>Bilbo Beutlin trifft die Zwerge.</description>\n                </chapter>\n                <chapter lcid=\"1031\">\n                    <name>Gebratenes Hammelfleisch</name>\n                    <page>35</page>\n                    <description>Die Zwerge begegnen Trollen.</description>\n                </chapter>\n            </chapters>\n        </info>\n    </book>\n    <book>\n        <title lang=\"en\">1984</title>\n        <author>George Orwell</author>\n        <year>1949</year>\n        <price currency=\"USD\">14.99</price>\n        <info>\n            <chapters>\n                <chapter>\n                    <name>The Principles of Newspeak</name>\n                    <page>1</page>\n                    <description>Introduction to the language of Oceania.</description>\n                </chapter>\n                <chapter>\n                    <name>War is Peace</name>\n                    <page>50</page>\n                    <description>Explanation of the Party's slogans.</description>\n                </chapter>\n            </chapters>\n        </info>\n    </book>\n</bookstore>"
+              }
+            ]
+          }
+        },
+        "Initialize_variable:_oBookstoreXml": {
+          "runAfter": {
+            "Initialize_variable:_sBookstoreXml": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "b8719ff7-0a2c-45f4-81fa-b375c0d59d4d"
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "oBookstoreXml",
+                "type": "object",
+                "value": "@xml(variables('sBookstoreXml'))"
+              }
+            ]
+          }
+        },
+        "Select_-_1": {
+          "runAfter": {
+            "Initialize_variable:_oBookstoreXml": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "7abe202d-c4e8-47f9-9d1f-cc69d934544e"
+          },
+          "type": "Select",
+          "inputs": {
+            "from": "@xpath(variables('oBookstoreXml'),'//book/*')",
+            "select": {
+              "nodeName": "@xpath(item(), 'name(/*)')",
+              "nodeValueAsString": "@xpath(item(), 'string(/*)')",
+              "chapterCount": "@xpath(item(), 'count(//chapter)')",
+              "chapterInformation": "@xpath(item(), 'concat(\"This node has \",count(//chapter), \" chapter child nodes\")')",
+              "nodePosition": "@xpath(item(), 'position()')"
+            }
+          },
+          "description": "retrieves all direct descendants of 'book' nodes"
+        },
+        "Select_-_3": {
+          "runAfter": {
+            "Select_-_2": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "5d3d321d-b021-4dca-981e-09ca8d3c4b04"
+          },
+          "type": "Select",
+          "inputs": {
+            "from": "@xpath(variables('oBookstoreXml'),'//book[title[@lang=\"en\"]]')",
+            "select": {
+              "titleAsArray": "@xpath(item(), '//title/text()')",
+              "chapterAsArray": "@xpath(item(), '//chapter/name/text()')",
+              "titlesAsString": "@xpath(item(), 'string(//title)')",
+              "chapterAsString": "@xpath(item(), 'string(//chapter/name)')",
+              "chaptersAfterPage10AsArray": "@xpath(item(), '//chapter[page>10]/name/text()')",
+              "chaptersAndPages": "@xpath(item(), '//chapter/*[self::name or self::page]/text()')",
+              "titleAndChaptersAsJSON": "@json(\r\nconcat(\r\n'{\"title\":\"',\r\nxpath(item(), 'string(//title)'),\r\n'\",\"chapters\":',\r\nxpath(item(), '//chapter/name/text()'),\r\n'}')\r\n)"
+            }
+          },
+          "description": "retrieves 'book' nodes where title has parameter lang='en'"
+        },
+        "Select_-_2": {
+          "runAfter": {
+            "Select_-_1": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "57cac347-c98c-4fcc-91fb-d051204dcc8f"
+          },
+          "type": "Select",
+          "inputs": {
+            "from": "@xpath(variables('oBookstoreXml'),'//book/*[@*]')",
+            "select": {
+              "nodeName": "@xpath(item(), 'name(/*)')",
+              "attributeLang": "@xpath(item(), '//@lang')",
+              "attributeLangValue": "@xpath(item(), 'string(//@lang)')",
+              "anyAttribute": "@xpath(item(), '//@*')"
+            }
+          },
+          "description": "retrieves all direct descendants of 'book' nodes, which have at least one attribute of any kind"
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}
